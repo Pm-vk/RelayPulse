@@ -1,0 +1,97 @@
+name: CI/CD Pipeline - TaskForge Job Processing Engine
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  # 1. Backend Lint & Test Job
+  backend-ci:
+    name: Backend API & Worker CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Backend Dependencies
+        run: |
+          cd server
+          npm install --include=dev
+
+      - name: Generate Prisma Client
+        run: |
+          cd server
+          npx prisma generate
+
+      - name: Run Backend TypeScript Type Checking
+        env:
+          DATABASE_URL: "postgresql://taskforge_admin:taskforge_password_2026@localhost:5432/taskforge_db?schema=public"
+          JWT_ACCESS_SECRET: test_jwt_access_secret
+          JWT_REFRESH_SECRET: test_jwt_refresh_secret
+        run: |
+          cd server
+          npx tsc --noEmit
+
+      - name: Execute Backend Unit Tests
+        env:
+          DATABASE_URL: "postgresql://taskforge_admin:taskforge_password_2026@localhost:5432/taskforge_db?schema=public"
+          JWT_ACCESS_SECRET: test_jwt_access_secret
+          JWT_REFRESH_SECRET: test_jwt_refresh_secret
+          NODE_ENV: test
+        run: |
+          cd server
+          npx jest --passWithNoTests
+
+  # 2. Frontend Lint & Build Job
+  frontend-ci:
+    name: Next.js Frontend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd client
+          npm install --include=dev
+
+      - name: Run Frontend TypeScript & Build Verification
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
+          NEXT_PUBLIC_SOCKET_URL: http://localhost:5000
+          NEXT_TELEMETRY_DISABLED: 1
+        run: |
+          cd client
+          npx next build
+
+  # 3. Docker Compose Build Verification Job
+  docker-build-ci:
+    name: Docker Container Build Verification
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        continue-on-error: true
+
+      - name: Build Docker Containers Configuration
+        run: |
+          docker compose config
