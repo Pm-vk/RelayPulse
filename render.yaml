@@ -29,6 +29,8 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
       - key: CLIENT_URL
         fromService:
           type: web
@@ -59,6 +61,8 @@ services:
           type: redis
           name: relaypulse-redis
           property: port
+      - key: GEMINI_API_KEY
+        sync: false
 
   # 3. Next.js Frontend Dashboard
   - type: web
