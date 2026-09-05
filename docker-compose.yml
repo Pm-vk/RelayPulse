@@ -2,28 +2,28 @@ services:
   # 1. PostgreSQL Database Service
   postgres:
     image: postgres:16-alpine
-    container_name: taskforge_postgres
+    container_name: relaypulse_postgres
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-taskforge_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskforge_password_2026}
-      POSTGRES_DB: ${POSTGRES_DB:-taskforge_db}
+      POSTGRES_USER: ${POSTGRES_USER:-relaypulse_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-relaypulse_password_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-relaypulse_db}
     ports:
       - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taskforge_admin} -d ${POSTGRES_DB:-taskforge_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-relaypulse_admin} -d ${POSTGRES_DB:-relaypulse_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - taskforge_network
+      - relaypulse_network
 
   # 2. Redis Cache & Queue Manager
   redis:
     image: redis:7-alpine
-    container_name: taskforge_redis
+    container_name: relaypulse_redis
     restart: always
     ports:
       - "6379:6379"
@@ -35,25 +35,25 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - taskforge_network
+      - relaypulse_network
 
   # 3. Express API Gateway & Socket Server
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: taskforge_server
+    container_name: relaypulse_server
     restart: always
     ports:
       - "5000:5000"
     environment:
       NODE_ENV: production
       PORT: 5000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-taskforge_admin}:${POSTGRES_PASSWORD:-taskforge_password_2026}@postgres:5432/${POSTGRES_DB:-taskforge_db}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-relaypulse_admin}:${POSTGRES_PASSWORD:-relaypulse_password_2026}@postgres:5432/${POSTGRES_DB:-relaypulse_db}?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-taskforge_super_secret_access_key_2026_change_in_prod}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-taskforge_super_secret_refresh_key_2026_change_in_prod}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-relaypulse_super_secret_access_key_2026_change_in_prod}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-relaypulse_super_secret_refresh_key_2026_change_in_prod}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
     depends_on:
@@ -62,18 +62,18 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - taskforge_network
+      - relaypulse_network
 
   # 4. BullMQ Background Worker Service
   worker:
     build:
       context: ./server
       dockerfile: Dockerfile.worker
-    container_name: taskforge_worker
+    container_name: relaypulse_worker
     restart: always
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-taskforge_admin}:${POSTGRES_PASSWORD:-taskforge_password_2026}@postgres:5432/${POSTGRES_DB:-taskforge_db}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-relaypulse_admin}:${POSTGRES_PASSWORD:-relaypulse_password_2026}@postgres:5432/${POSTGRES_DB:-relaypulse_db}?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
@@ -82,14 +82,14 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - taskforge_network
+      - relaypulse_network
 
   # 5. Next.js Micro-SaaS Frontend Dashboard
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
-    container_name: taskforge_client
+    container_name: relaypulse_client
     restart: always
     ports:
       - "3000:3000"
@@ -99,10 +99,10 @@ services:
     depends_on:
       - server
     networks:
-      - taskforge_network
+      - relaypulse_network
 
 networks:
-  taskforge_network:
+  relaypulse_network:
     driver: bridge
 
 volumes:
