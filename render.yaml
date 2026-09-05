@@ -32,10 +32,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: CLIENT_URL
-        fromService:
-          type: web
-          name: relaypulse-client
-          property: url
+        value: https://relaypulse-client.onrender.com
 
   # 2. BullMQ Background Worker
   - type: worker
@@ -73,16 +70,9 @@ services:
     startCommand: npm start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: relaypulse-api
-          property: url
-          postfix: /api/v1
+        value: https://relaypulse-api.onrender.com/api/v1
       - key: NEXT_PUBLIC_SOCKET_URL
-        fromService:
-          type: web
-          name: relaypulse-api
-          property: url
+        value: https://relaypulse-api.onrender.com
 
 databases:
   - name: relaypulse-db
