@@ -3,6 +3,7 @@ services:
   - type: web
     name: relaypulse-api
     env: node
+    plan: free
     rootDir: server
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm start
@@ -38,6 +39,7 @@ services:
   - type: worker
     name: relaypulse-worker
     env: node
+    plan: starter
     rootDir: server
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start:worker
@@ -65,6 +67,7 @@ services:
   - type: web
     name: relaypulse-client
     env: node
+    plan: free
     rootDir: client
     buildCommand: npm install && npm run build
     startCommand: npm start
@@ -78,3 +81,4 @@ databases:
   - name: relaypulse-db
     databaseName: relaypulse
     user: relaypulse_admin
+    plan: free
